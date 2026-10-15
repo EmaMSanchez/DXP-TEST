@@ -1,0 +1,18 @@
+---
+import { storyblokEditable } from "@storyblok/astro";
+import Hero from "../components/Hero.jsx";
+import JourneyContinuation from "../components/JourneyContinuation.astro";
+import { getHeroContent } from "../lib/heroContent.js";
+
+const { blok } = Astro.props;
+const content = getHeroContent(blok);
+content.scenes = content.scenes.map(({ raw, ...scene }) => ({
+  ...scene,
+  ...(raw ? { editorAttrs: storyblokEditable(raw) } : {}),
+}));
+---
+
+<section {...storyblokEditable(blok)}>
+  <Hero content={content} client:load />
+  <JourneyContinuation heroBlok={blok} heroContent={content} />
+</section>

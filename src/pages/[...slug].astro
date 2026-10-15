@@ -1,0 +1,20 @@
+---
+import { useStoryblokApi } from '@storyblok/astro';
+import StoryblokComponent from '@storyblok/astro/StoryblokComponent.astro';
+import Layout from '../layouts/Layout.astro';
+
+const { slug } = Astro.params;
+
+const storyblokApi = useStoryblokApi();
+const { data } = await storyblokApi.get(`cdn/stories/${slug || 'home'}`, {
+	version: import.meta.env.DEV ? 'draft' : 'published'
+});
+
+const story = data.story;
+const heroBlok = story.content.body?.find((blok) => blok.component === 'hero-section');
+const immersive = Boolean(heroBlok);
+---
+
+<Layout immersive={immersive} title={immersive ? heroBlok.intro_title || 'Bienvenido a este viaje' : story.name}>
+	<StoryblokComponent blok={story.content} />
+</Layout>

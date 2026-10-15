@@ -1,0 +1,145 @@
+---
+import { assetUrl } from '../lib/heroContent.js';
+import '../styles/journey.css';
+
+const { heroBlok, heroContent } = Astro.props;
+const scenes = heroContent?.scenes ?? [];
+const text = (value, fallback = '') => typeof value === 'string' && value.trim() ? value.trim() : fallback;
+const words = (value) => value.split(/\s+/).filter(Boolean);
+const imageAlt = (asset, fallback) => text(asset?.alt, asset?.filename ? '' : fallback);
+
+const openingTitle = text(heroBlok?.opening_title, 'Una nueva perspectiva desde el interior');
+const openingWords = words(openingTitle);
+const detailTitle = text(heroBlok?.detail_title, scenes[1]?.headline || 'Cada detalle cuenta');
+const detailText = text(heroBlok?.detail_text, scenes[1]?.subheadline || 'Una experiencia diseñada para descubrir algo diferente.');
+const closingTitle = text(heroBlok?.closing_title, scenes.at(-1)?.headline || 'Tu viaje comienza acá');
+const closingWords = words(closingTitle);
+const closingText = text(heroBlok?.closing_text, heroContent?.introSubtitle || 'Una experiencia que comienza con una nueva perspectiva.');
+
+const openingImage = assetUrl(heroBlok?.opening_image, '/images/flight-last-frame.webp');
+const detailImage = assetUrl(heroBlok?.detail_image, '/images/flight-cabin-detail.webp');
+const closingImage = assetUrl(heroBlok?.closing_image, heroContent?.introPoster || '/videos/toma-hero-poster.webp');
+const cta = heroContent?.cta;
+---
+
+<section id="continuacion" class="journey-continuation" aria-label="El viaje continúa">
+  <div class="journey-opening">
+    <div class="journey-opening-copy">
+      <p class="journey-eyebrow">El viaje continúa</p>
+      <h2 class="journey-title journey-title--large" data-journey-title aria-label={openingTitle}>
+        <span aria-hidden="true">
+          {openingWords.map((word, index) => <><span class="journey-word">{word}</span>{index < openingWords.length - 1 && ' '}</>)}
+        </span>
+      </h2>
+    </div>
+    <figure class="journey-figure journey-opening-figure" data-journey-reveal>
+      <img
+        src={openingImage}
+        alt={imageAlt(heroBlok?.opening_image, 'Vista amplia del interior del avión con asientos claros y madera')}
+        loading="lazy"
+        decoding="async"
+      />
+      <figcaption>Una mirada al interior</figcaption>
+    </figure>
+  </div>
+
+  <div class="journey-detail">
+    <figure class="journey-figure journey-detail-figure" data-journey-reveal>
+      <img
+        src={detailImage}
+        alt={imageAlt(heroBlok?.detail_image, 'Asientos color crema y detalles en madera en la cabina del avión')}
+        loading="lazy"
+        decoding="async"
+      />
+      <figcaption>Los detalles del recorrido</figcaption>
+    </figure>
+    <div class="journey-detail-copy" data-journey-reveal>
+      <p class="journey-eyebrow">Una mirada más cerca</p>
+      <h2 class="journey-title">{detailTitle}</h2>
+      <p class="journey-body">{detailText}</p>
+    </div>
+  </div>
+
+  <div class="journey-closing">
+    <figure class="journey-figure journey-closing-figure" data-journey-reveal>
+      <img
+        src={closingImage}
+        alt={imageAlt(heroBlok?.closing_image, 'Atardecer entre las nubes visto desde la ventanilla del avión')}
+        loading="lazy"
+        decoding="async"
+      />
+      <figcaption>Otra forma de mirar</figcaption>
+    </figure>
+    <div class="journey-closing-copy">
+      <p class="journey-eyebrow">Una nueva perspectiva</p>
+      <h2 class="journey-title" data-journey-title aria-label={closingTitle}>
+        <span aria-hidden="true">
+          {closingWords.map((word, index) => <><span class="journey-word">{word}</span>{index < closingWords.length - 1 && ' '}</>)}
+        </span>
+      </h2>
+      <p class="journey-body">{closingText}</p>
+      <div class="journey-closing-links">
+        {cta && <a class="journey-cta" href={cta.href} rel={cta.external ? 'noopener noreferrer' : undefined}>{cta.text}</a>}
+        <a class="journey-back" href="#inicio">Volver al inicio</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="journey-footer">
+    <span>Una nueva perspectiva</span>
+    <a href="#inicio">Volver al inicio</a>
+  </footer>
+</section>
+
+<script>
+  const continuation = document.querySelector('.journey-continuation');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const saveData = navigator.connection?.saveData === true;
+
+  if (continuation && !reduceMotion && !saveData) {
+    if ('IntersectionObserver' in window) {
+      const reveal = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.remove('is-pending');
+          reveal.unobserve(entry.target);
+        }
+      }, { rootMargin: '0px 0px -8% 0px' });
+
+      for (const target of continuation.querySelectorAll('[data-journey-reveal]')) {
+        target.classList.add('is-pending');
+        reveal.observe(target);
+      }
+    }
+
+    Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(([gsapModule, scrollModule]) => {
+      const { gsap } = gsapModule;
+      const { ScrollTrigger } = scrollModule;
+      gsap.registerPlugin(ScrollTrigger);
+
+      for (const title of continuation.querySelectorAll('[data-journey-title]')) {
+        const words = [...title.querySelectorAll('.journey-word')];
+        const illuminate = (progress) => {
+          const count = Math.ceil(progress * words.length);
+          words.forEach((word, index) => word.classList.toggle('is-lit', index < count));
+        };
+
+        const trigger = ScrollTrigger.create({
+          trigger: title,
+          start: 'top 85%',
+          end: 'bottom 45%',
+          invalidateOnRefresh: true,
+          onUpdate: (self) => illuminate(self.progress),
+          onRefresh: (self) => illuminate(self.progress),
+        });
+        title.classList.add('is-animated');
+        illuminate(trigger.progress);
+      }
+    }).catch(() => {
+      // Without the scroll library, keep the copy fully legible.
+      for (const title of continuation.querySelectorAll('[data-journey-title]')) {
+        title.classList.remove('is-animated');
+      }
+    });
+  }
+</script>

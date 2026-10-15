@@ -1,0 +1,61 @@
+---
+const currentYear = new Date().getFullYear();
+const { immersive = false, title = 'Storyblok & Astro' } = Astro.props;
+---
+
+<!doctype html>
+<html lang={immersive ? 'es' : 'en'}>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>{title}</title>
+		{immersive && <meta name="description" content="Un viaje para descubrir otra perspectiva desde el interior de un avión privado." />}
+		{immersive && <meta property="og:title" content={title} />}
+		{immersive && <meta property="og:image" content={new URL('/videos/toma-hero-poster.webp', Astro.url).href} />}
+		{immersive && <meta name="theme-color" content="#131209" />}
+		{!immersive && (
+			<link
+				rel="stylesheet"
+				href="https://a.storyblok.com/f/212319/x/e6ccda03b8/blueprint-blank.css"
+			/>
+		)}
+		<link rel="icon" type="image/svg+xml" href={immersive ? '/favicon-flight.svg' : '/favicon.svg'} />
+		{!immersive && <link rel="icon" type="image/x-icon" href="/favicon.ico" />}
+		<meta name="generator" content={Astro.generator} />
+	</head>
+	<body class:list={{ 'immersive-page': immersive }}>
+		<a class="skip-link" href="#contenido">Saltar al contenido</a>
+		<slot />
+		{!immersive && <footer>All rights reserved © {currentYear}</footer>}
+	</body>
+</html>
+
+<style>
+	.immersive-page {
+		margin: 0;
+		padding: 0;
+		max-width: none;
+		background: #131209;
+	}
+
+	.immersive-page :global(main) {
+		margin: 0;
+		padding: 0;
+		max-width: none;
+	}
+
+	.skip-link {
+		position: fixed;
+		z-index: 100;
+		top: 8px;
+		left: 8px;
+		padding: 12px 16px;
+		transform: translateY(-150%);
+		background: #131209;
+		color: #fffaf1;
+	}
+
+	.skip-link:focus-visible {
+		transform: none;
+	}
+</style>
