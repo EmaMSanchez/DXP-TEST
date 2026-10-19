@@ -16,9 +16,9 @@
 		"vite-plugin-mkcert": "^2.1.0"
 	},
 	"dependencies": {
-		"@astrojs/netlify": "^8.2.6",
-		"@astrojs/react": "^7.0.1",
-		"@astrojs/vercel": "^11.0.10",
+		"@astrojs/netlify": "^8.2.10",
+		"@astrojs/react": "^7.1.0",
+		"@astrojs/vercel": "^11.0.15",
 		"@types/react": "^19.3.0",
 		"@types/react-dom": "^19.3.0",
 		"gsap": "^3.15.0",
